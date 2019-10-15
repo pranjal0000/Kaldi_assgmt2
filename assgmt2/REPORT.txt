@@ -1,0 +1,105 @@
+Pranjal Jain 170070030
+Shreyas Goenka 17D070037
+
+Task 1:
+num_iters: Refers to the number of training iterations for the Gaussian HMMs to train on. We tried to use 30,35,40, 45 and 50 iterations. The best results appeared at 40 iterations, it seems that convergence occurs at 40 iterations and further change causes dip in results.
+max_iter_inc: Represents upto which iteration to allow the number of gaussians in Gaussian Mixture Model to increase. Having tried values 25,30 and 35, the value 30 gave the lowest WER.
+totgauss: This represents the target number of Gaussians in the GMM for each of states in the phones. Using too few gaussians results in inadequate representations of the distribution, however too many gaussians causes overfitting. After trying various possibilities including 1000,1024,2048,2500 we found the optimum number to be 2048.
+boost_silence: The default value was 1. This is a scaling factor for the likelihoods corresponding to the GMMs for the silence phones. By increasing this parameter, we indicate that it's more likely for silence to occur. Having tried values 0.5,1,1.5, we found that the optimum value was 1.5
+realign_iters: This represents the iterations at which the realignment of speech frames should be done. Having tried vaious possibilities including realignment being done at every iteration, and at regular intervals, the values given to us gave the least WER.
+
+The WER on using Monophones was 50.91%, %WER 50.91 [ 557 / 1094, 31 ins, 128 del, 398 sub ] exp/mono/decode_test/wer_8
+
+
+Task 2:
+a) There are four such suffixes _B, _I, _S, and _E. These are used to represent position dependant phones.
+_B, _I, _S and _E are used to represent Begin, Internal, Signleton and End respectively which refer to the position of the phone in the word.
+
+b) '#0,#1....#8' are used to make the L(pronounciation model) composed with the G(language model) deterministic.
+These are auxillary phone symbols which have two purposes. #0 is used to mark the end of phonetic transcriptions of each word. 
+LoG are often non-deterministic when not using auxillary phone symbols. One reason is because of the presence of homophones. 
+In order to tackle this, '#1,...,#m' are used to distinguish between homophones and make LoG deterministic.
+eg. si: #0 sea
+	si: #1 see
+	These are added to the end of the pronounciations and help to distinguish between the homophones.
+
+
+Depending upon the number of distinct words with the same pronounciations, we choose an appropriate number of auxillary phone symbols, and we append these to the sequence of phones, modifying the LoG graph appropriately to make it deterministic. For the english language, having 9 such symbols is enough because this is at the very high end of the number of words with a given pronounciation. 
+
+Task 3:
+a) The WER on using Monophones was 50.91%, %WER 50.91 [ 557 / 1094, 31 ins, 128 del, 398 sub ] exp/mono/decode_test/wer_8
+
+On using tied-state triphones, the WER was 46.53, %WER 46.53 [ 509 / 1094, 39 ins, 140 del, 330 sub ] exp/tri1/decode_test/wer_17
+
+NOTE: THE ASSIGNMENT MENTIONS TO SUBMIT UPDATED PARAMETERS FOR TRAIN_DELTAS.sh in RUN.SH
+
+HENCE WE GET THE FOLLOWING OUTPUT,
+
+%WER 50.91 [ 532 / 1094, 25 ins, 152 del, 355 sub ] exp/mono/decode_test/wer_9 for monophones
+%WER 44.88 [ 491 / 1094, 29 ins, 134 del, 328 sub ] exp/tri1/decode_test/wer_17 for tied state triphones
+
+
+
+b) The first hyperparameter corresponds to 'numleaves', which represents the number of leaves for the binary decision tree which will group the states together in the tied-state triphone model
+The second hyperparameter correponds to 'totgauss' which represents the target number of gaussians in the GMM.
+The default combination of 2000,20000 corresponds to 46.53%.
+Trying many combinations of both, we found that the minimum WER corresponds to 1000 and 30000, giving a WER of 45.43%.
+
+Further, on tuning the hyperparameters in train_deltas.sh, changing the acoustic scale to 0.01, num_iters to 45, max_iter_inc to 35 and realign_iters to "10 20 30 40" gave a WER of 44.88%
+
+So after tuning hyperparameters, we get 44.88%
+
+Task 4:
+After using the following to construct language models, the following were some of the top-performing models obtained based on perplexity:
+The number indicates the PERPLEXITY obtained for that specific language model
+
+Trigram with one laplace smoothing 66.69634
+Trigram with interpolation paramter 0.5 55.21349
+Trigram with Chen and Goodman modified Kneser Ney 53.54684
+Trigram with unmodified Kneser Ney 62.78231
+fourgram 71.98921
+fourgram with unmodified kneser ney 70.50193
+fourgram with Chen and Goodman modified Kneser Ney 69.39013
+
+The lowest perplexity was obtained for a Trigram model with Chen and Goodman modified Kneser Ney smoothing. The WER in this case was 45.25% using triphone tied-state models, which is comparable to the 44.88% obtained in the previous task.
+%WER 45.25 [ 495 / 1094, 28 ins, 139 del, 328 sub ] exp/tri1/decode_test/wer_14
+
+
+
+Task 5:
+Both the methods give approximately the same improved WER of 40.59% on tied-state triphones and 48.63% on monophone models.
+The second method (using lmrescore.sh) was faster than he first method(creating a new decoding graph), which was to be expected because creating a decoding graph is an expensive operation, rather, rescoring lattices is a less expensive operation.
+Stage 5 has been added to run.sh
+Just change stage parameter in run.sh to stage=5
+%WER 40.59 [ 444 / 1094, 35 ins, 118 del, 291 sub ] exp/tri1/decode_test/wer_15
+
+Task 6:
+(g)%WER 31.17 [ 226 / 725, 23 ins, 41 del, 162 sub ] decode_test/wer_15
+(m)%WER 44.79 [ 43 / 96, 3 ins, 7 del, 33 sub ] decode_test/wer_13
+(n)%WER 58.82 [ 50 / 85, 4 ins, 17 del, 29 sub ] decode_test/wer_11
+(l)%WER 63.30 [ 119 / 188, 3 ins, 50 del, 66 sub ] decode_test/wer_16
+
+This the output recieved on the terminal
+NOTE: PREVIOUSLY, WE RAN TASK 5, so the G.fst created from swahili.big.arpa was used to create the graph,
+to test on the files, we use a python script to seprate the different types of training instances and store them in testm,testg etc and use decode.sh to get the answers
+
+
+Task 7:
+ ./task7/findword.sh "tanzania"
+ ./task7/findword.sh tanzania
+
+ Both the commands work. Our code assumes that the task7 folder has been copied to the recipie folder.
+ NOTE: THE OUTPUT WAVEFILES ARE DIRECTED TO A DIRECTORY task7/output.
+ We run a bash scirpt to get all words in the training instances along with the corresponding start time and duration, call grep to get the instances of the word we want, and use sox trim to get the final wav files which is stored in output folder in task7 directory
+
+ Task 8:
+ Submitted on Kaggle
+
+
+
+
+
+
+
+
+
